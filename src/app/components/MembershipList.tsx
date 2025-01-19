@@ -1,33 +1,56 @@
-// src/components/EventList.tsx
 "use client";
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 
+// Define Membership interface directly in this file
 interface Membership {
   id: number;
   name: string;
   description: string;
-  price: string;
-  image: string;
+  price: number;
+  created_at: string;
 }
 
 export default function MembershipList() {
-  const [memberships, setMembership] = useState<Membership[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMemberships = async () => {
-      const response = await fetch("/api/membership");
-      const data = await response.json();
-      setMembership(data);
+      try {
+        const response = await fetch("/api/membership");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch memberships");
+        }
+
+        const data: Membership[] = await response.json();
+        setMemberships(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchMemberships();
   }, []);
+
+  if (loading) return <p>Loading memberships...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       {memberships.map((membership) => (
         <div key={membership.id} className="bg-white p-6 rounded-lg shadow-md">
-          <Image src={`/${membership.image}`} width={300} height={200} alt="" />
+          <Image
+            src={`/${membership.id}.jpg`} // Use actual image paths
+            width={300}
+            height={200}
+            alt={membership.name}
+          />
           <h3 className="text-xl font-semibold mb-4 mt-4 text-[#3C3B3B]">
             {membership.name}
           </h3>
